@@ -1,0 +1,35 @@
+PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+TOOLCHAIN_PREFIX = arm-none-eabi
+CC = $(TOOLCHAIN_PREFIX)gcc
+CXX = $(TOOLCHAIN_PREFIX)g++
+AR = $(TOOLCHAIN_PREFIX)gcc-ar
+
+OBJS = STM32F4_lib.o
+
+
+ifeq ($(BUILD_MODE),debug)
+	CFLAGS += -g
+else ifeq ($(BUILD_MODE),run)
+	CFLAGS += -O2
+else
+	$(error Build mode $(BUILD_MODE) not supported by this Makefile)
+endif
+
+CCFLAGS+=-mthumb -mthumb-interwork -mcpu=cortex-m4
+CCFLAGS+=-mfpu=fpv4-sp-d16 -mfloat-abi=hard
+
+
+all:	STM32F4_lib
+
+STM32F4_lib:	$(OBJS)
+	$(CXX) -o $@ $^
+
+%.o:	$(PROJECT_ROOT)%.cpp
+	$(CXX) -c $(CCFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<
+
+%.o:	$(PROJECT_ROOT)%.c
+	$(CC) -c $(CCFLAGS) $(CPPFLAGS) -o $@ $<
+
+clean:
+	rm -fr STM32F4_lib $(OBJS)
